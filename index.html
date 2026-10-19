@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alec's projects - Dynamic Avatars Dashboard</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            },
+            dark: {
+              bg: '#0f172a',
+              card: '#1e293b',
+              border: '#334155',
+              hover: '#334155/60'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    
+    .glass-effect {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .heart-anim {
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .heart-anim:hover {
+      transform: scale(1.25);
+    }
+
+    /* Tab active underline animation */
+    .active-tab {
+      border-bottom: 2px solid #6366f1;
+      color: #6366f1;
+      background-color: rgba(99, 102, 241, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-dark-bg text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- APP CONTAINER -->
+  <div id="app" class="flex flex-col min-h-screen">
+    
+    <!-- HEADER -->
+    <header class="sticky top-0 z-30 border-b border-dark-border glass-effect px-4 lg:px-8 py-3.5">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+        
+        <!-- LOGO & BRAND -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-violet-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/30">
+            A
+          </div>
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h1 class="text-xl lg:text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
+                Alec's projects
+              </h1>
+              <span id="avatar-count-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-brand-500/20 text-brand-500 border border-brand-500/30">
+                0 avatars
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 hidden sm:block">Gestionnaire interactif de personas & profils</p>
+          </div>
+        </div>
+
+        <!-- HEADER ACTIONS -->
+        <div class="flex items-center gap-3">
+          <button onclick="openModal()" class="flex items-center gap-2 bg-gradient-to-r from-brand-600 to-violet-600 hover:from-brand-500 hover:to-violet-500 text-white font-medium px-4 py-2 rounded-xl transition duration-200 shadow-lg shadow-brand-500/25 active:scale-95 text-sm">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>Nouveau profil / Avatar</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- DYNAMIC TAB NAVIGATION BAR -->
+    <nav class="bg-dark-card/60 border-b border-dark-border px-4 lg:px-8 sticky top-[65px] z-20 backdrop-blur-md overflow-x-auto">
+      <div class="max-w-7xl mx-auto flex items-center space-x-1 py-1.5" id="tabs-container">
+        <!-- Tabs will be rendered here dynamically -->
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6">
+      
+      <!-- VIEW 1: DASHBOARD OVERVIEW -->
+      <section id="dashboard-view" class="space-y-6">
+        
+        <!-- STATISTICS CARDS -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-dark-card border border-dark-border rounded-2xl p-4 flex items-center gap-4">
+            <div class="p-3 bg-brand-500/10 text-brand-500 rounded-xl">
+              <i class="fa-solid fa-users text-xl"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-medium">Total Avatars</p>
+              <h3 id="stat-total" class="text-2xl font-bold text-white">0</h3>
+            </div>
+          </div>
+
+          <div class="bg-dark-card border border-dark-border rounded-2xl p-4 flex items-center gap-4">
+            <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
+              <i class="fa-solid fa-bullseye text-xl"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-medium">Objectifs Actifs</p>
+              <h3 id="stat-active" class="text-2xl font-bold text-white">0</h3>
+            </div>
+          </div>
+
+          <div class="bg-dark-card border border-dark-border rounded-2xl p-4 flex items-center gap-4">
+            <div class="p-3 bg-rose-500/10 text-rose-400 rounded-xl">
+              <i class="fa-solid fa-heart text-xl"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-medium">Score Moyen</p>
+              <h3 id="stat-rating" class="text-2xl font-bold text-white">0.0</h3>
+            </div>
+          </div>
+
+          <div class="bg-dark-card border border-dark-border rounded-2xl p-4 flex items-center gap-4">
+            <div class="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
+              <i class="fa-solid fa-comments text-xl"></i>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400 font-medium">Commentaires</p>
+              <h3 id="stat-comments" class="text-2xl font-bold text-white">0</h3>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEARCH & FILTER BAR -->
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-4 flex flex-col md:flex-row gap-4 justify-between items-center">
+          <div class="relative w-full md:w-96">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="search-input" oninput="renderDashboard()" placeholder="Rechercher par nom, prénom ou rôle..." 
+              class="w-full bg-dark-bg border border-dark-border rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition">
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <!-- Filter by Status -->
+            <select id="filter-status" onchange="renderDashboard()" class="bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-brand-500">
+              <option value="ALL">Tous les statuts</option>
+              <option value="En cours">En cours</option>
+              <option value="Terminé">Terminé</option>
+              <option value="En pause">En pause</option>
+              <option value="À venir">À venir</option>
+            </select>
+
+            <!-- Filter by Heart Rating -->
+            <select id="filter-rating" onchange="renderDashboard()" class="bg-dark-bg border border-dark-border rounded-xl px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-brand-500">
+              <option value="ALL">Toutes les notes</option>
+              <option value="5">5 Coeurs ❤️❤️❤️❤️❤️</option>
+              <option value="4">4+ Coeurs ❤️❤️❤️❤️</option>
+              <option value="3">3+ Coeurs ❤️❤️❤️</option>
+              <option value="2">2+ Coeurs ❤️❤️</option>
+              <option value="1">1+ Coeur ❤️</option>
+            </select>
+
+            <button onclick="resetFilters()" class="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-dark-border/50 transition" title="Réinitialiser les filtres">
+              <i class="fa-solid fa-arrows-rotate text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- AVATARS GRID -->
+        <div id="avatars-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Dynamically populated cards -->
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div id="empty-state" class="hidden flex-col items-center justify-center py-16 text-center bg-dark-card/40 rounded-2xl border border-dashed border-dark-border p-8">
+          <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 mb-4 text-2xl">
+            <i class="fa-solid fa-user-slash"></i>
+          </div>
+          <h3 class="text-lg font-semibold text-white mb-1">Aucun avatar trouvé</h3>
+          <p class="text-sm text-slate-400 max-w-sm mb-6">Aucun profil ne correspond à vos critères de recherche ou vous n'avez pas encore créé d'avatar.</p>
+          <button onclick="openModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-xl transition">
+            Créer un premier avatar
+          </button>
+        </div>
+
+      </section>
+
+      <!-- VIEW 2: DEDICATED AVATAR PROFILE VIEW -->
+      <section id="avatar-view" class="hidden space-y-6">
+        <!-- Dynamically rendered individual avatar details -->
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD / EDIT AVATAR -->
+  <div id="avatar-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+    <div class="bg-dark-card border border-dark-border rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-6 relative my-8">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-dark-border pb-4">
+        <h3 id="modal-title" class="text-xl font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-brand-500"></i>
+          <span>Nouveau profil / Avatar</span>
+        </h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-dark-border/50 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Modal Form -->
+      <form id="avatar-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+        <input type="hidden" id="form-avatar-id">
+
+        <!-- Avatar Selection / Picker -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Image / Avatar *</label>
+          
+          <!-- Avatar Source Tabs -->
+          <div class="flex gap-2 p-1 bg-dark-bg border border-dark-border rounded-xl mb-3">
+            <button type="button" onclick="setAvatarType('emoji')" id="avatar-tab-emoji" 
+              class="flex-1 py-1.5 text-xs font-medium rounded-lg transition">Emoji / Icône</button>
+            <button type="button" onclick="setAvatarType('url')" id="avatar-tab-url" 
+              class="flex-1 py-1.5 text-xs font-medium rounded-lg transition">Lien URL</button>
+            <button type="button" onclick="setAvatarType('upload')" id="avatar-tab-upload" 
+              class="flex-1 py-1.5 text-xs font-medium rounded-lg transition">Téléverser</button>
+          </div>
+
+          <input type="hidden" id="form-avatar-type" value="emoji">
+          <input type="hidden" id="form-avatar-value" value="👤">
+
+          <!-- Option A: Emoji Preset Picker -->
+          <div id="avatar-picker-emoji" class="space-y-2">
+            <div class="flex items-center gap-3 overflow-x-auto pb-2" id="avatar-picker-options">
+              <!-- Dynamically populated avatar presets -->
+            </div>
+          </div>
+
+          <!-- Option B: Custom Image URL -->
+          <div id="avatar-picker-url" class="hidden space-y-2">
+            <input type="url" id="form-avatar-url-input" oninput="updateAvatarPreviewFromUrl(this.value)" placeholder="https://images.unsplash.com/photo-..." 
+              class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+            <p class="text-[11px] text-slate-400">Insérez un lien direct vers une image web (PNG, JPG, WebP).</p>
+          </div>
+
+          <!-- Option C: File Upload -->
+          <div id="avatar-picker-upload" class="hidden space-y-2">
+            <label class="flex flex-col items-center justify-center p-4 border-2 border-dashed border-dark-border hover:border-brand-500/50 rounded-xl cursor-pointer bg-dark-bg/50 hover:bg-dark-bg transition group">
+              <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-400 group-hover:text-brand-400 mb-1"></i>
+              <span class="text-xs text-slate-300 font-medium">Glisser un fichier ou cliquer pour parcourir</span>
+              <span class="text-[10px] text-slate-500 mt-0.5">Format PNG, JPG ou GIF (max 2MB recommandé)</span>
+              <input type="file" id="form-avatar-file-input" accept="image/*" onchange="handleFileUpload(event)" class="hidden">
+            </label>
+          </div>
+
+          <!-- Live Preview Container -->
+          <div class="mt-3 flex items-center gap-3 p-2.5 rounded-xl bg-dark-bg/80 border border-dark-border">
+            <span class="text-xs text-slate-400 font-medium">Aperçu en direct:</span>
+            <div id="form-avatar-preview" class="w-10 h-10 rounded-xl bg-slate-800 border border-dark-border flex items-center justify-center text-xl overflow-hidden shadow">
+              👤
+            </div>
+          </div>
+        </div>
+
+        <!-- Name & Surname -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Prénom *</label>
+            <input type="text" id="form-firstname" required placeholder="ex: Jean" 
+              class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Nom *</label>
+            <input type="text" id="form-lastname" required placeholder="ex: Dupont" 
+              class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+
+        <!-- Role & Status -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Rôle / Titre</label>
+            <input type="text" id="form-role" placeholder="ex: UI/UX Designer, Lead Tech..." 
+              class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Statut</label>
+            <select id="form-status" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+              <option value="En cours">En cours</option>
+              <option value="Terminé">Terminé</option>
+              <option value="En pause">En pause</option>
+              <option value="À venir">À venir</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Heart Rating (0 to 5) -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Évaluation (0 à 5 cœurs)</label>
+          <div class="flex items-center gap-2 bg-dark-bg border border-dark-border rounded-xl p-2 w-fit" id="form-heart-picker">
+            <!-- Interactive heart selection -->
+          </div>
+          <input type="hidden" id="form-rating" value="3">
+        </div>
+
+        <!-- Main Objective -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Objectif Principal</label>
+          <textarea id="form-objective" rows="2" placeholder="Quel est le but principal de ce persona / projet ?" 
+            class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500 resize-none"></textarea>
+        </div>
+
+        <!-- Metadata / Key-Values -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Âge / Étape</label>
+            <input type="text" id="form-meta-age" placeholder="ex: 28 ans, Phase 1" 
+              class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Tags / Mots-clés (séparés par virgules)</label>
+            <input type="text" id="form-meta-tags" placeholder="ex: React, Design, MVP" 
+              class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+          </div>
+        </div>
+
+        <!-- Actions Buttons -->
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-dark-border">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-dark-border/50 text-sm font-medium transition">
+            Annuler
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-violet-600 hover:from-brand-500 hover:to-violet-500 text-white text-sm font-semibold shadow-lg shadow-brand-500/20 transition">
+            Enregistrer le profil
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // PRESET AVATAR EMOJIS & ICONS
+    const AVATAR_PRESETS = ["🚀", "👨‍💻", "👩‍💻", "🎨", "⚡", "🧠", "🎯", "🦊", "🦁", "🔮", "💎", "🤖", "🔥", "🦄"];
+
+    // HELPER: RENDER AVATAR DISPLAY HTML
+    function getAvatarDisplayHTML(avatar, sizeClass = "w-12 h-12 text-2xl") {
+      const type = avatar.avatarType || (avatar.icon && avatar.icon.startsWith("http") ? "url" : "emoji");
+      const val = avatar.avatarValue || avatar.icon || "👤";
+
+      if (type === "url" || type === "upload" || (val.startsWith("http") || val.startsWith("data:image"))) {
+        return `
+          <div class="${sizeClass} rounded-2xl bg-slate-800 border border-dark-border overflow-hidden shrink-0 shadow-sm">
+            <img src="${val}" alt="${avatar.firstname || 'Avatar'}" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='👤';">
+          </div>
+        `;
+      }
+
+      return `
+        <div class="${sizeClass} rounded-2xl bg-slate-800 border border-dark-border flex items-center justify-center shrink-0 shadow-sm">
+          ${val}
+        </div>
+      `;
+    }
+
+    // SAMPLE INITIAL DATA
+    const INITIAL_AVATARS = [
+      {
+        id: "avatar-1",
+        firstname: "Alexandre",
+        lastname: "Tremblay",
+        role: "Développeur Fullstack",
+        status: "En cours",
+        rating: 5,
+        avatarType: "url",
+        avatarValue: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
+        objective: "Concevoir et déployer l'architecture Cloud de l'application SaaS.",
+        meta: {
+          age: "31 ans",
+          tags: ["Node.js", "React", "Docker"]
+        },
+        checklist: [
+          { id: 1, text: "Configurer le dépôt GitHub & CI/CD", done: true },
+          { id: 2, text: "Implémenter la base de données PostgreSQL", done: true },
+          { id: 3, text: "Finaliser les API d'authentification OAuth2", done: false }
+        ],
+        comments: [
+          { id: "c1", author: "Alec", text: "Excellente progression sur la partie backend !", timestamp: "18/10/2026, 14:30" }
+        ]
+      },
+      {
+        id: "avatar-2",
+        firstname: "Camille",
+        lastname: "Moreau",
+        role: "Product Designer",
+        status: "En cours",
+        rating: 4,
+        avatarType: "url",
+        avatarValue: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300",
+        objective: "Créer le Design System complet et les maquettes Figma haute fidélité.",
+        meta: {
+          age: "27 ans",
+          tags: ["Figma", "Design System", "UX Research"]
+        },
+        checklist: [
+          { id: 1, text: "Mener 5 interviews utilisateurs", done: true },
+          { id: 2, text: "Valider la charte graphique et la typographie", done: true },
+          { id: 3, text: "Prototyper l'interface mobile interactive", done: false }
+        ],
+        comments: [
+          { id: "c2", author: "Alec", text: "Les retours sur les maquettes sont très positifs.", timestamp: "19/10/2026, 09:15" }
+        ]
+      },
+      {
+        id: "avatar-3",
+        firstname: "Lucas",
+        lastname: "Vidal",
+        role: "Growth Marketer",
+        status: "À venir",
+        rating: 3,
+        avatarType: "emoji",
+        avatarValue: "🚀",
+        objective: "Lancer la campagne d'acquisition utilisateurs et booster le SEO.",
+        meta: {
+          age: "29 ans",
+          tags: ["SEO", "Analytics", "Copywriting"]
+        },
+        checklist: [
+          { id: 1, text: "Définir la stratégie de mots-clés", done: false },
+          { id: 2, text: "Rédiger 4 articles de blog fondateurs", done: false }
+        ],
+        comments: []
+      }
+    ];
+
+    // APPLICATION STATE
+    let avatars = [];
+    let currentTab = "dashboard"; // 'dashboard' or avatar id
+
+    // INITIALIZATION
+    window.addEventListener("DOMContentLoaded", () => {
+      loadAvatars();
+      setupAvatarPicker();
+      renderTabs();
+      renderView();
+    });
+
+    // LOCAL STORAGE HANDLING
+    function loadAvatars() {
+      const stored = localStorage.getItem("alec_projects_avatars");
+      if (stored) {
+        try {
+          avatars = JSON.parse(stored);
+        } catch (e) {
+          avatars = INITIAL_AVATARS;
+        }
+      } else {
+        avatars = INITIAL_AVATARS;
+        saveAvatars();
+      }
+    }
+
+    function saveAvatars() {
+      localStorage.setItem("alec_projects_avatars", JSON.stringify(avatars));
+    }
+
+    // TAB MANAGEMENT
+    function switchTab(tabId) {
+      currentTab = tabId;
+      renderTabs();
+      renderView();
+    }
+
+    function renderTabs() {
+      const container = document.getElementById("tabs-container");
+      container.innerHTML = "";
+
+      // 1. Dashboard Tab
+      const dashboardBtn = document.createElement("button");
+      dashboardBtn.onclick = () => switchTab("dashboard");
+      dashboardBtn.className = `flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition whitespace-nowrap ${
+        currentTab === "dashboard"
+          ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
+          : "text-slate-400 hover:text-white hover:bg-dark-border/50"
+      }`;
+      dashboardBtn.innerHTML = `<i class="fa-solid fa-chart-pie"></i> <span>Vue d'ensemble</span>`;
+      container.appendChild(dashboardBtn);
+
+      // Separator
+      const sep = document.createElement("div");
+      sep.className = "h-4 w-[1px] bg-dark-border mx-1 shrink-0";
+      container.appendChild(sep);
+
+      // 2. Individual Avatar Tabs
+      avatars.forEach(avatar => {
+        const btn = document.createElement("button");
+        btn.onclick = () => switchTab(avatar.id);
+        const isActive = currentTab === avatar.id;
+        btn.className = `flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition whitespace-nowrap ${
+          isActive
+            ? "bg-brand-500/15 text-brand-400 border border-brand-500/30 font-semibold"
+            : "text-slate-400 hover:text-white hover:bg-dark-border/40"
+        }`;
+
+        const thumbHTML = getAvatarDisplayHTML(avatar, "w-5 h-5 text-xs");
+        btn.innerHTML = `${thumbHTML} <span>${avatar.firstname} ${avatar.lastname}</span>`;
+        container.appendChild(btn);
+      });
+    }
+
+    // VIEW ROUTING
+    function renderView() {
+      const dashboardView = document.getElementById("dashboard-view");
+      const avatarView = document.getElementById("avatar-view");
+
+      if (currentTab === "dashboard") {
+        dashboardView.classList.remove("hidden");
+        avatarView.classList.add("hidden");
+        renderDashboard();
+      } else {
+        dashboardView.classList.add("hidden");
+        avatarView.classList.remove("hidden");
+        renderAvatarDetail(currentTab);
+      }
+    }
+
+    // RENDER DASHBOARD
+    function renderDashboard() {
+      // Stats Calculations
+      const total = avatars.length;
+      const activeGoals = avatars.filter(a => a.status === "En cours").length;
+      const avgRating = total ? (avatars.reduce((acc, a) => acc + (a.rating || 0), 0) / total).toFixed(1) : "0.0";
+      const totalComments = avatars.reduce((acc, a) => acc + (a.comments ? a.comments.length : 0), 0);
+
+      document.getElementById("stat-total").innerText = total;
+      document.getElementById("stat-active").innerText = activeGoals;
+      document.getElementById("stat-rating").innerText = avgRating;
+      document.getElementById("stat-comments").innerText = totalComments;
+      document.getElementById("avatar-count-badge").innerText = `${total} avatar${total > 1 ? 's' : ''}`;
+
+      // Filters & Search
+      const searchVal = (document.getElementById("search-input").value || "").toLowerCase();
+      const filterStatus = document.getElementById("filter-status").value;
+      const filterRating = document.getElementById("filter-rating").value;
+
+      const filtered = avatars.filter(avatar => {
+        const fullName = `${avatar.firstname} ${avatar.lastname} ${avatar.role}`.toLowerCase();
+        const matchesSearch = fullName.includes(searchVal);
+        const matchesStatus = filterStatus === "ALL" || avatar.status === filterStatus;
+        const matchesRating = filterRating === "ALL" || avatar.rating >= parseInt(filterRating);
+
+        return matchesSearch && matchesStatus && matchesRating;
+      });
+
+      const grid = document.getElementById("avatars-grid");
+      const emptyState = document.getElementById("empty-state");
+      grid.innerHTML = "";
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove("hidden");
+        emptyState.classList.add("flex");
+      } else {
+        emptyState.classList.add("hidden");
+        emptyState.classList.remove("flex");
+
+        filtered.forEach(avatar => {
+          const card = document.createElement("div");
+          card.className = "bg-dark-card border border-dark-border rounded-2xl p-5 hover:border-brand-500/50 transition duration-300 flex flex-col justify-between group shadow-lg shadow-black/20 relative overflow-hidden";
+
+          // Status Badge Color
+          let statusBg = "bg-slate-500/10 text-slate-400 border-slate-500/30";
+          if (avatar.status === "En cours") statusBg = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+          if (avatar.status === "Terminé") statusBg = "bg-blue-500/10 text-blue-400 border-blue-500/30";
+          if (avatar.status === "En pause") statusBg = "bg-amber-500/10 text-amber-400 border-amber-500/30";
+          if (avatar.status === "À venir") statusBg = "bg-purple-500/10 text-purple-400 border-purple-500/30";
+
+          // Hearts Display
+          let heartsHTML = "";
+          for (let i = 1; i <= 5; i++) {
+            if (i <= avatar.rating) {
+              heartsHTML += `<i class="fa-solid fa-heart text-rose-500 text-xs"></i>`;
+            } else {
+              heartsHTML += `<i class="fa-regular fa-heart text-slate-600 text-xs"></i>`;
+            }
+          }
+
+          const avatarDisplay = getAvatarDisplayHTML(avatar, "w-12 h-12 text-2xl group-hover:scale-105 transition duration-200");
+
+          card.innerHTML = `
+            <div>
+              <div class="flex items-start justify-between gap-3 mb-4">
+                <div class="flex items-center gap-3">
+                  ${avatarDisplay}
+                  <div>
+                    <h4 class="font-bold text-white text-base leading-snug group-hover:text-brand-400 transition">
+                      ${avatar.firstname} ${avatar.lastname}
+                    </h4>
+                    <p class="text-xs text-slate-400">${avatar.role || "Aucun rôle"}</p>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 text-[10px] font-semibold rounded-full border ${statusBg} uppercase tracking-wider shrink-0">
+                  ${avatar.status}
+                </span>
+              </div>
+
+              <!-- Rating Hearts -->
+              <div class="flex items-center gap-1.5 mb-3 bg-dark-bg/60 w-fit px-2.5 py-1 rounded-lg border border-dark-border">
+                <div class="flex gap-1">${heartsHTML}</div>
+                <span class="text-xs text-slate-400 font-medium ml-1">${avatar.rating}/5</span>
+              </div>
+
+              <!-- Goal Summary -->
+              <div class="mb-4">
+                <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                  <strong class="text-slate-300">Objectif:</strong> ${avatar.objective || "Aucun objectif spécifié."}
+                </p>
+              </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="pt-4 border-t border-dark-border/60 flex items-center justify-between text-xs text-slate-400">
+              <div class="flex items-center gap-3">
+                <span title="Commentaires"><i class="fa-regular fa-comment text-slate-500"></i> ${avatar.comments ? avatar.comments.length : 0}</span>
+                <span title="Tâches"><i class="fa-regular fa-square-check text-slate-500"></i> ${avatar.checklist ? avatar.checklist.filter(c => c.done).length : 0}/${avatar.checklist ? avatar.checklist.length : 0}</span>
+              </div>
+
+              <button onclick="switchTab('${avatar.id}')" class="flex items-center gap-1 text-brand-400 font-medium hover:text-brand-300 transition group-hover:translate-x-0.5">
+                <span>Voir profil</span>
+                <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      }
+    }
+
+    // RESET FILTERS
+    function resetFilters() {
+      document.getElementById("search-input").value = "";
+      document.getElementById("filter-status").value = "ALL";
+      document.getElementById("filter-rating").value = "ALL";
+      renderDashboard();
+    }
+
+    // RENDER DETAILED AVATAR PAGE
+    function renderAvatarDetail(avatarId) {
+      const avatar = avatars.find(a => a.id === avatarId);
+      const container = document.getElementById("avatar-view");
+
+      if (!avatar) {
+        switchTab("dashboard");
+        return;
+      }
+
+      // Status Badge Styling
+      let statusBg = "bg-slate-500/10 text-slate-400 border-slate-500/30";
+      if (avatar.status === "En cours") statusBg = "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
+      if (avatar.status === "Terminé") statusBg = "bg-blue-500/10 text-blue-400 border-blue-500/30";
+      if (avatar.status === "En pause") statusBg = "bg-amber-500/10 text-amber-400 border-amber-500/30";
+      if (avatar.status === "À venir") statusBg = "bg-purple-500/10 text-purple-400 border-purple-500/30";
+
+      // Hearts Selection HTML
+      let heartsHTML = "";
+      for (let i = 1; i <= 5; i++) {
+        const isFilled = i <= avatar.rating;
+        heartsHTML += `
+          <button onclick="updateAvatarRating('${avatar.id}', ${i})" class="heart-anim text-lg focus:outline-none">
+            <i class="${isFilled ? 'fa-solid fa-heart text-rose-500' : 'fa-regular fa-heart text-slate-600'}"></i>
+          </button>
+        `;
+      }
+
+      // Tags HTML
+      const tagsHTML = avatar.meta && avatar.meta.tags
+        ? avatar.meta.tags.map(t => `<span class="px-2.5 py-0.5 text-xs rounded-lg bg-dark-border text-slate-300">${t.trim()}</span>`).join(' ')
+        : `<span class="text-xs text-slate-500">Aucun tag</span>`;
+
+      // Checklist HTML
+      const checklistHTML = (avatar.checklist || []).map((item) => `
+        <div class="flex items-center justify-between p-3 rounded-xl bg-dark-bg/50 border border-dark-border/60 hover:border-dark-border transition">
+          <label class="flex items-center gap-3 cursor-pointer text-sm text-slate-200">
+            <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklist('${avatar.id}', ${item.id})" 
+              class="w-4 h-4 rounded border-dark-border bg-dark-bg text-brand-600 focus:ring-brand-500">
+            <span class="${item.done ? 'line-through text-slate-500' : ''}">${item.text}</span>
+          </label>
+          <button onclick="deleteChecklist('${avatar.id}', ${item.id})" class="text-slate-500 hover:text-rose-400 text-xs p-1">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `).join('');
+
+      // Comments HTML
+      const commentsHTML = (avatar.comments || []).map((c) => `
+        <div class="p-4 rounded-xl bg-dark-bg/60 border border-dark-border space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-brand-500/20 text-brand-400 font-bold text-xs flex items-center justify-center">
+                ${c.author.charAt(0)}
+              </span>
+              <span class="font-semibold text-xs text-slate-200">${c.author}</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-[11px] text-slate-500">${c.timestamp}</span>
+              <button onclick="deleteComment('${avatar.id}', '${c.id}')" class="text-slate-500 hover:text-rose-400 text-xs">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+          <p class="text-sm text-slate-300 leading-relaxed">${c.text}</p>
+        </div>
+      `).join('');
+
+      const avatarDisplayHeader = getAvatarDisplayHTML(avatar, "w-20 h-20 text-4xl ring-2 ring-brand-500/30");
+
+      container.innerHTML = `
+        <!-- HEADER PROFILE BANNER -->
+        <div class="bg-dark-card border border-dark-border rounded-2xl p-6 lg:p-8 space-y-6 relative overflow-hidden">
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            
+            <div class="flex items-center gap-5">
+              ${avatarDisplayHeader}
+              <div>
+                <div class="flex flex-wrap items-center gap-3">
+                  <h2 class="text-2xl lg:text-3xl font-extrabold text-white">${avatar.firstname} ${avatar.lastname}</h2>
+                  <span class="px-3 py-1 text-xs font-semibold rounded-full border ${statusBg} uppercase tracking-wider">
+                    ${avatar.status}
+                  </span>
+                </div>
+                <p class="text-sm text-slate-400 font-medium mt-1">${avatar.role || "Rôle non spécifié"}</p>
+                
+                <div class="flex items-center gap-3 mt-3">
+                  <div class="flex items-center gap-1.5 bg-dark-bg px-3 py-1.5 rounded-xl border border-dark-border">
+                    <span class="text-xs text-slate-400 mr-1 font-medium">Satisfaction:</span>
+                    ${heartsHTML}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="flex items-center gap-3 w-full md:w-auto">
+              <button onclick="openModal('${avatar.id}')" class="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-dark-border/60 hover:bg-dark-border text-slate-200 text-sm font-medium transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                <span>Éditer</span>
+              </button>
+              <button onclick="deleteAvatar('${avatar.id}')" class="flex-1 md:flex-none px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-sm font-medium transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-trash text-xs"></i>
+                <span>Supprimer</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TWO COLUMN DETAILS LAYOUT -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- LEFT COLUMN: OBJECTIVES & CHECKLIST -->
+          <div class="lg:col-span-2 space-y-6">
+            
+            <!-- OBJECTIVE CARD -->
+            <div class="bg-dark-card border border-dark-border rounded-2xl p-6 space-y-4">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-bullseye text-brand-500"></i>
+                <span>Objectif Principal & Vision</span>
+              </h3>
+              <p class="text-sm text-slate-300 leading-relaxed bg-dark-bg/60 p-4 rounded-xl border border-dark-border">
+                ${avatar.objective || "Aucun objectif principal rédigé pour le moment."}
+              </p>
+
+              <!-- CHECKLIST / SUB-GOALS -->
+              <div class="pt-2 space-y-3">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Plan d'action / Jalons</h4>
+                  <span class="text-xs text-brand-400 font-semibold">
+                    ${avatar.checklist ? avatar.checklist.filter(c => c.done).length : 0} / ${avatar.checklist ? avatar.checklist.length : 0} complétés
+                  </span>
+                </div>
+
+                <div class="space-y-2">
+                  ${checklistHTML || '<p class="text-xs text-slate-500 italic">Aucune étape créée.</p>'}
+                </div>
+
+                <!-- Add Checklist Input -->
+                <form onsubmit="addChecklistItem(event, '${avatar.id}')" class="flex gap-2 pt-2">
+                  <input type="text" id="new-checklist-input" placeholder="Ajouter une nouvelle étape..." required
+                    class="flex-1 bg-dark-bg border border-dark-border rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                  <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-medium transition">
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            <!-- COMMENTS & NOTES -->
+            <div class="bg-dark-card border border-dark-border rounded-2xl p-6 space-y-4">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-comments text-brand-500"></i>
+                <span>Commentaires & Notes (${avatar.comments ? avatar.comments.length : 0})</span>
+              </h3>
+
+              <!-- Comments List -->
+              <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                ${commentsHTML || '<p class="text-xs text-slate-500 italic py-4 text-center">Aucun commentaire pour l\'instant. Soyez le premier à ajouter une note !</p>'}
+              </div>
+
+              <!-- Add Comment Form -->
+              <form onsubmit="addComment(event, '${avatar.id}')" class="pt-2 space-y-3">
+                <textarea id="new-comment-text" rows="2" placeholder="Ajouter un commentaire ou une remarque..." required
+                  class="w-full bg-dark-bg border border-dark-border rounded-xl p-3 text-sm text-white focus:outline-none focus:border-brand-500 resize-none"></textarea>
+                <div class="flex justify-end">
+                  <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                    <span>Publier la note</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: METADATA & EXTRA INFO -->
+          <div class="space-y-6">
+            <div class="bg-dark-card border border-dark-border rounded-2xl p-6 space-y-4">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-brand-500"></i>
+                <span>Informations Détaillées</span>
+              </h3>
+
+              <div class="space-y-3 divide-y divide-dark-border/60">
+                <div class="pt-2 flex items-center justify-between">
+                  <span class="text-xs text-slate-400 font-medium">Âge / Étape</span>
+                  <span class="text-sm text-slate-200 font-semibold">${(avatar.meta && avatar.meta.age) || "N/A"}</span>
+                </div>
+
+                <div class="pt-3 flex items-center justify-between">
+                  <span class="text-xs text-slate-400 font-medium">Identifiant</span>
+                  <span class="text-xs font-mono text-slate-400">${avatar.id}</span>
+                </div>
+
+                <div class="pt-3 flex flex-col gap-2">
+                  <span class="text-xs text-slate-400 font-medium">Tags / Mots-clés</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${tagsHTML}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      `;
+    }
+
+    // AVATAR PICKER TYPE SWITCHING & PREVIEWS
+    function setAvatarType(type) {
+      document.getElementById("form-avatar-type").value = type;
+
+      const tabEmoji = document.getElementById("avatar-tab-emoji");
+      const tabUrl = document.getElementById("avatar-tab-url");
+      const tabUpload = document.getElementById("avatar-tab-upload");
+
+      const pickerEmoji = document.getElementById("avatar-picker-emoji");
+      const pickerUrl = document.getElementById("avatar-picker-url");
+      const pickerUpload = document.getElementById("avatar-picker-upload");
+
+      // Reset Active Tabs Styling
+      [tabEmoji, tabUrl, tabUpload].forEach(tab => {
+        tab.className = "flex-1 py-1.5 text-xs font-medium rounded-lg transition text-slate-400 hover:text-white";
+      });
+
+      pickerEmoji.classList.add("hidden");
+      pickerUrl.classList.add("hidden");
+      pickerUpload.classList.add("hidden");
+
+      if (type === 'emoji') {
+        tabEmoji.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg transition bg-brand-600 text-white shadow";
+        pickerEmoji.classList.remove("hidden");
+        const val = document.getElementById("form-avatar-value").value || "👤";
+        updateAvatarPreview(val, 'emoji');
+      } else if (type === 'url') {
+        tabUrl.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg transition bg-brand-600 text-white shadow";
+        pickerUrl.classList.remove("hidden");
+        const urlVal = document.getElementById("form-avatar-url-input").value;
+        updateAvatarPreview(urlVal || "https://images.unsplash.com/photo-1534528741775-53994a69daeb", 'url');
+      } else if (type === 'upload') {
+        tabUpload.className = "flex-1 py-1.5 text-xs font-semibold rounded-lg transition bg-brand-600 text-white shadow";
+        pickerUpload.classList.remove("hidden");
+        const currentVal = document.getElementById("form-avatar-value").value;
+        if (currentVal && currentVal.startsWith("data:image")) {
+          updateAvatarPreview(currentVal, 'upload');
+        } else {
+          updateAvatarPreview("👤", 'emoji');
+        }
+      }
+    }
+
+    function setupAvatarPicker() {
+      const container = document.getElementById("avatar-picker-options");
+      container.innerHTML = "";
+
+      AVATAR_PRESETS.forEach(emoji => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "avatar-preset-btn w-10 h-10 rounded-xl bg-dark-bg border border-dark-border text-xl flex items-center justify-center hover:bg-dark-border transition shrink-0";
+        btn.innerText = emoji;
+        btn.onclick = () => selectAvatarEmoji(emoji, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectAvatarEmoji(emoji, targetBtn) {
+      document.getElementById("form-avatar-value").value = emoji;
+      document.querySelectorAll(".avatar-preset-btn").forEach(b => {
+        b.classList.remove("border-brand-500", "bg-brand-500/20");
+        b.classList.add("border-dark-border", "bg-dark-bg");
+      });
+      if (targetBtn) {
+        targetBtn.classList.remove("border-dark-border", "bg-dark-bg");
+        targetBtn.classList.add("border-brand-500", "bg-brand-500/20");
+      }
+      updateAvatarPreview(emoji, 'emoji');
+    }
+
+    function updateAvatarPreviewFromUrl(url) {
+      document.getElementById("form-avatar-value").value = url;
+      updateAvatarPreview(url, 'url');
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (file.size > 3 * 1024 * 1024) {
+        alert("L'image est trop volumineuse (max 3Mo).");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64Data = e.target.result;
+        document.getElementById("form-avatar-value").value = base64Data;
+        updateAvatarPreview(base64Data, 'upload');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateAvatarPreview(value, type) {
+      const preview = document.getElementById("form-avatar-preview");
+      if (type === 'url' || type === 'upload' || (value && (value.startsWith('http') || value.startsWith('data:image')))) {
+        preview.innerHTML = `<img src="${value}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='👤';">`;
+      } else {
+        preview.innerHTML = value || "👤";
+      }
+    }
+
+    // MODAL OPEN / CLOSE & SUBMIT
+    function openModal(editId = null) {
+      const modal = document.getElementById("avatar-modal");
+      const form = document.getElementById("avatar-form");
+      const modalTitle = document.getElementById("modal-title");
+
+      form.reset();
+      setupAvatarPicker();
+
+      if (editId) {
+        const avatar = avatars.find(a => a.id === editId);
+        if (avatar) {
+          modalTitle.innerHTML = `<i class="fa-solid fa-pen-to-square text-brand-500"></i> <span>Éditer le profil</span>`;
+          document.getElementById("form-avatar-id").value = avatar.id;
+          document.getElementById("form-firstname").value = avatar.firstname || "";
+          document.getElementById("form-lastname").value = avatar.lastname || "";
+          document.getElementById("form-role").value = avatar.role || "";
+          document.getElementById("form-status").value = avatar.status || "En cours";
+          document.getElementById("form-rating").value = avatar.rating || 3;
+          document.getElementById("form-objective").value = avatar.objective || "";
+          document.getElementById("form-meta-age").value = (avatar.meta && avatar.meta.age) || "";
+          document.getElementById("form-meta-tags").value = (avatar.meta && avatar.meta.tags) ? avatar.meta.tags.join(", ") : "";
+
+          const type = avatar.avatarType || (avatar.icon && avatar.icon.startsWith("http") ? "url" : "emoji");
+          const val = avatar.avatarValue || avatar.icon || "👤";
+
+          document.getElementById("form-avatar-value").value = val;
+          if (type === 'url') document.getElementById("form-avatar-url-input").value = val;
+
+          setAvatarType(type);
+          if (type === 'emoji') {
+            const btn = Array.from(document.querySelectorAll(".avatar-preset-btn")).find(b => b.innerText === val);
+            selectAvatarEmoji(val, btn);
+          }
+
+          renderModalHearts(avatar.rating || 3);
+        }
+      } else {
+        modalTitle.innerHTML = `<i class="fa-solid fa-user-plus text-brand-500"></i> <span>Nouveau profil / Avatar</span>`;
+        document.getElementById("form-avatar-id").value = "";
+        document.getElementById("form-avatar-value").value = AVATAR_PRESETS[0];
+        setAvatarType('emoji');
+        const firstBtn = document.querySelector(".avatar-preset-btn");
+        selectAvatarEmoji(AVATAR_PRESETS[0], firstBtn);
+        renderModalHearts(3);
+      }
+
+      modal.classList.remove("hidden");
+    }
+
+    function closeModal() {
+      document.getElementById("avatar-modal").classList.add("hidden");
+    }
+
+    function renderModalHearts(selectedRating) {
+      const container = document.getElementById("form-heart-picker");
+      container.innerHTML = "";
+      document.getElementById("form-rating").value = selectedRating;
+
+      for (let i = 1; i <= 5; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "heart-anim text-lg p-1 focus:outline-none";
+        btn.innerHTML = `<i class="${i <= selectedRating ? 'fa-solid fa-heart text-rose-500' : 'fa-regular fa-heart text-slate-600'}"></i>`;
+        btn.onclick = () => renderModalHearts(i);
+        container.appendChild(btn);
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      const editId = document.getElementById("form-avatar-id").value;
+      const firstname = document.getElementById("form-firstname").value.trim();
+      const lastname = document.getElementById("form-lastname").value.trim();
+      const role = document.getElementById("form-role").value.trim();
+      const status = document.getElementById("form-status").value;
+      const rating = parseInt(document.getElementById("form-rating").value) || 3;
+      const objective = document.getElementById("form-objective").value.trim();
+      
+      const avatarType = document.getElementById("form-avatar-type").value;
+      const avatarValue = document.getElementById("form-avatar-value").value || "👤";
+
+      const age = document.getElementById("form-meta-age").value.trim();
+      const tagsRaw = document.getElementById("form-meta-tags").value.trim();
+      const tags = tagsRaw ? tagsRaw.split(",").map(t => t.trim()) : [];
+
+      if (editId) {
+        // Edit Existing Avatar
+        const avatar = avatars.find(a => a.id === editId);
+        if (avatar) {
+          avatar.firstname = firstname;
+          avatar.lastname = lastname;
+          avatar.role = role;
+          avatar.status = status;
+          avatar.rating = rating;
+          avatar.objective = objective;
+          avatar.avatarType = avatarType;
+          avatar.avatarValue = avatarValue;
+          avatar.icon = avatarValue; // backward compatibility
+          avatar.meta = { age, tags };
+        }
+      } else {
+        // Create New Avatar
+        const newAvatar = {
+          id: 'avatar-' + Date.now(),
+          firstname,
+          lastname,
+          role,
+          status,
+          rating,
+          avatarType,
+          avatarValue,
+          icon: avatarValue,
+          objective,
+          meta: { age, tags },
+          checklist: [],
+          comments: []
+        };
+        avatars.push(newAvatar);
+        currentTab = newAvatar.id;
+      }
+
+      saveAvatars();
+      closeModal();
+      renderTabs();
+      renderView();
+    }
+
+    // INTERACTIVE RATINGS, CHECKLIST & COMMENTS
+    function updateAvatarRating(avatarId, rating) {
+      const avatar = avatars.find(a => a.id === avatarId);
+      if (avatar) {
+        avatar.rating = rating;
+        saveAvatars();
+        renderView();
+      }
+    }
+
+    function toggleChecklist(avatarId, itemId) {
+      const avatar = avatars.find(a => a.id === avatarId);
+      if (avatar && avatar.checklist) {
+        const item = avatar.checklist.find(c => c.id === itemId);
+        if (item) {
+          item.done = !item.done;
+          saveAvatars();
+          renderAvatarDetail(avatarId);
+        }
+      }
+    }
+
+    function addChecklistItem(e, avatarId) {
+      e.preventDefault();
+      const input = document.getElementById("new-checklist-input");
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      const avatar = avatars.find(a => a.id === avatarId);
+      if (avatar) {
+        if (!avatar.checklist) avatar.checklist = [];
+        avatar.checklist.push({
+          id: Date.now(),
+          text,
+          done: false
+        });
+        saveAvatars();
+        renderAvatarDetail(avatarId);
+      }
+    }
+
+    function deleteChecklist(avatarId, itemId) {
+      const avatar = avatars.find(a => a.id === avatarId);
+      if (avatar && avatar.checklist) {
+        avatar.checklist = avatar.checklist.filter(c => c.id !== itemId);
+        saveAvatars();
+        renderAvatarDetail(avatarId);
+      }
+    }
+
+    function addComment(e, avatarId) {
+      e.preventDefault();
+      const textarea = document.getElementById("new-comment-text");
+      const text = textarea.value.trim();
+
+      if (!text) return;
+
+      const avatar = avatars.find(a => a.id === avatarId);
+      if (avatar) {
+        if (!avatar.comments) avatar.comments = [];
+        const now = new Date();
+        const timestamp = now.toLocaleDateString("fr-FR") + ", " + now.toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' });
+
+        avatar.comments.unshift({
+          id: 'c-' + Date.now(),
+          author: 'Alec',
+          text,
+          timestamp
+        });
+
+        saveAvatars();
+        renderAvatarDetail(avatarId);
+      }
+    }
+
+    function deleteComment(avatarId, commentId) {
+      const avatar = avatars.find(a => a.id === avatarId);
+      if (avatar && avatar.comments) {
+        avatar.comments = avatar.comments.filter(c => c.id !== commentId);
+        saveAvatars();
+        renderAvatarDetail(avatarId);
+      }
+    }
+
+    // DELETE AVATAR
+    function deleteAvatar(avatarId) {
+      avatars = avatars.filter(a => a.id !== avatarId);
+      saveAvatars();
+      currentTab = "dashboard";
+      renderTabs();
+      renderView();
+    }
+  </script>
+</body>
+</html>
